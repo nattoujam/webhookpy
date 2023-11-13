@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "webhookpy"
+version = "0.1.0"
+description = "post for webhook"
+authors = ["nattoujam <Public.kyuuanago@gmail.com>"]
+license = "NYSL 0.9982"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^8.1.7"
+requests = "^2.31.0"
+pyyaml = "^6.0.1"
+
+[tool.poetry.scripts]
+webhook = "webhookpy.command:webhook"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
