@@ -30,8 +30,9 @@ def webhook():
 @click.argument('url', type=click.STRING)
 @click.argument('channel', type=click.STRING)
 @click.argument('bot_name', type=click.STRING)
+@click.option('--app', '-a', default='slack', show_default=True, type=click.Choice(['slack']), help='target application')
 @click.option('--default', '-d', 'set_default', default=False, is_flag=True, help='set default')
-def add(name: str, url: str, channel: str, bot_name: str, set_default: bool):
+def add(name: str, url: str, channel: str, bot_name: str, app: str, set_default: bool):
     """add hook setting.
 
     \b
@@ -51,11 +52,11 @@ def add(name: str, url: str, channel: str, bot_name: str, set_default: bool):
         exit(FAILED)
 
     if set_default:
-        config.add(name, url, channel, bot_name) \
+        config.add(name, url, channel, bot_name, app) \
               .set_default(name) \
               .dump(CONFIG_PATH)
     else:
-        config.add(name, url, channel, bot_name) \
+        config.add(name, url, channel, bot_name, app) \
               .dump(CONFIG_PATH)
 
 

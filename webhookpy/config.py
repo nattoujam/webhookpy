@@ -18,6 +18,7 @@ RESERVED_WORDS = [DEFAULT_HOOK_KEY, EMPTY]
 
 
 class Hook(NamedTuple):
+    app: str
     name: str
     url: str
     channel: str
@@ -60,24 +61,28 @@ class Config:
 
     @property
     def hooks(self) -> List[Hook]:
-        return [Hook(k, v['url'], v['channel'], v['bot_name']) for k, v in self.d.items() if k != DEFAULT_HOOK_KEY]
+        return [Hook(v['app'], k, v['url'], v['channel'], v['bot_name']) for k, v in self.d.items() if k != DEFAULT_HOOK_KEY]
 
     def hook(self, name: str) -> Optional[Hook]:
         hook = self.d[name] if name in self.d else None
         if hook is None:
             return None
         else:
-            return Hook(name, hook['url'], hook['channel'], hook['bot_name'])
+            return Hook(hook['app'], name, hook['url'], hook['channel'], hook['bot_name'])
 
     def empty(self) -> bool:
+        if self.d is None:
+            return True
+
         return len(self.d.keys()) <= 1
 
     def set_default(self, name: str) -> Config:
         return Config({**self.d, **{DEFAULT_HOOK_KEY: name}})
 
-    def add(self, name: str, url: str, channel: str, bot_name: str) -> Config:
+    def add(self, name: str, url: str, channel: str, bot_name: str, app: str) -> Config:
         adding_config = {
             name: {
+                'app': app,
                 'url': url,
                 'channel': channel,
                 'bot_name': bot_name
