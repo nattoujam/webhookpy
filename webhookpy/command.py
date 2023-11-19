@@ -10,8 +10,8 @@ from pathlib import Path
 
 import click
 
-from . import slack_webhook as wh
 from . import errors
+from . import slack_webhook as wh
 from .config import Config
 
 CONFIG_FILE = 'config.yml'
@@ -42,22 +42,27 @@ def add(name: str, url: str, channel: str, bot_name: str, app: str, set_default:
     BOT_NAME: sender name to post.
     """
 
-    config = Config.load(CONFIG_PATH)
-    if name in config.reserved_words:
+    if name in Config.reserved_words():
         click.echo(errors.reserved(name), err=True)
         exit(FAILED)
 
-    if name in config:
-        click.echo(errors.duplicate_name(name), err=True)
-        exit(FAILED)
-
-    if set_default:
+    config = Config.load(CONFIG_PATH)
+    if config.empty():
         config.add(name, url, channel, bot_name, app) \
               .set_default(name) \
               .dump(CONFIG_PATH)
     else:
-        config.add(name, url, channel, bot_name, app) \
-              .dump(CONFIG_PATH)
+        if name in config:
+            click.echo(errors.duplicate_name(name), err=True)
+            exit(FAILED)
+
+        if set_default:
+            config.add(name, url, channel, bot_name, app) \
+                  .set_default(name) \
+                  .dump(CONFIG_PATH)
+        else:
+            config.add(name, url, channel, bot_name, app) \
+                  .dump(CONFIG_PATH)
 
 
 @webhook.command(short_help='set default hook setting')
@@ -90,6 +95,10 @@ def remove(name: str):
     """
 
     config = Config.load(CONFIG_PATH)
+    if config.empty():
+        click.echo(errors.config_empty(), err=True)
+        exit(FAILED)
+
     if name not in config:
         click.echo(errors.not_exists_name(name), err=True)
         exit(FAILED)
@@ -109,9 +118,12 @@ def list():
 
     click.echo(f'*{config.default}')
     for hook in config.hooks:
+        click.echo(f'{hook.name}.application = {hook.app}')
         click.echo(f'{hook.name}.url = {hook.url}')
         click.echo(f'{hook.name}.channel = {hook.channel}')
         click.echo(f'{hook.name}.bot_name = {hook.bot_name}')
+
+    config.dump(CONFIG_PATH)
 
 
 @webhook.command(short_help='post message')
@@ -127,6 +139,10 @@ def post(message: str, name: str = None):
     """
 
     config = Config.load(CONFIG_PATH)
+
+    if config.empty():
+        click.echo(errors.config_empty(), err=True)
+        exit(FAILED)
 
     if name is None:
         if config.default is None:

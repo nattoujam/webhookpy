@@ -3,14 +3,15 @@
 # File              : config.py
 # Author            : nattoujam <Public.kyuuanago@gmail.com>
 # Date              : 2023 11/13
-# Last Modified Date: 2023 11/13
+# Last Modified Date: 2023 11/19
 # Last Modified By  : nattoujam <Public.kyuuanago@gmail.com>
 
 from __future__ import annotations
-import yaml
-from pathlib import Path
-from typing import Optional, List, NamedTuple
 
+from pathlib import Path
+from typing import List, NamedTuple, Optional
+
+import yaml
 
 DEFAULT_HOOK_KEY = 'default'
 EMPTY = ''
@@ -36,18 +37,24 @@ class Config:
             config_path.touch()
             return Config()
 
+    @staticmethod
+    def reserved_words() -> List[str]:
+        return RESERVED_WORDS
+
     def __init__(self, d: dict = dict()):
         self.d: dict = d
 
     def __contains__(self, name: str) -> bool:
+        if self.d is None:
+            return False
+
         return name in self.d.keys()
 
     @property
-    def reserved_words(self) -> List[str]:
-        return RESERVED_WORDS
-
-    @property
     def names(self) -> List[str]:
+        if self.d is None:
+            return []
+
         return list(self.d.keys())
 
     @property
@@ -88,10 +95,12 @@ class Config:
                 'bot_name': bot_name
             }
         }
-        if DEFAULT_HOOK_KEY in self.d:
-            return Config({**{DEFAULT_HOOK_KEY: name}, **self.d, **adding_config})
-        else:
+        if self.d is None:
+            return Config({**{DEFAULT_HOOK_KEY: name}, **adding_config})
+        elif DEFAULT_HOOK_KEY in self.d:
             return Config({**self.d, **adding_config})
+        else:
+            return Config({**{DEFAULT_HOOK_KEY: name}, **self.d, **adding_config})
 
     def remove(self, name: str) -> Config:
         if name == self.default:
